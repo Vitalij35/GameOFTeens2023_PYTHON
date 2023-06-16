@@ -18,6 +18,7 @@ dp = Dispatcher(bot, storage=storage)
 
 
 class FSM(StatesGroup):
+    Start = State()
     Q1 = State()
     Q2 = State()
     Q3 = State()
@@ -67,12 +68,13 @@ def q5_kb() -> ReplyKeyboardMarkup:
 @dp.message_handler(commands="start")
 async def start(message: Message):
     await message.answer("Привіт, я бот lifecell і я допоможу тобі обрати найкращий тариф! 😉\n"
-                         "Все дуже просто!🤗 Тобі знадобится лише відповісти на 5 запитань"
-                         "Натисни на клавішу щоб розпочати!",
+                         "Все дуже просто!🤗 Тобі знадобится лише відповісти на 5 запитань\n"
+                         "Натисни на клавішу «Почнімо!» щоб розпочати!",
                          reply_markup=start_kb())
+    await FSM.Start.set()
 
 
-@dp.message_handler()
+@dp.message_handler(state=FSM.Start)
 async def Q1(message: Message):
     if message.text == 'Почнімо!😉':
         await message.answer("Чудово!✨\n\n"
@@ -142,7 +144,7 @@ async def Q5(message: Message):
         case "Постійно буваю😎":
             tar[3] = tar[3] + 3
     await message.answer("5 запитання:\n"
-                         "Для якого користування вам цей тариф?",
+                         "Навіщо вам цей тариф?",
                          reply_markup=q5_kb())
     await FSM.Q5.set()
 
@@ -154,11 +156,11 @@ async def result(message: Message):
     global tar
     match message.text:
         case "Для дитини🧒":
-            tar[4] = tar[4] + 5
+            tar[4] = tar[4] + 10
         case "Для планшету":
-            tar[6] = tar[6] + 5
+            tar[6] = tar[6] + 10
         case "Для Ґаджету⌚️":
-            tar[5] = tar[5] + 5
+            tar[5] = tar[5] + 10
 
     for i in range(0, len(tar)):
         if tar[i] > max_bal:
@@ -204,9 +206,8 @@ async def result(message: Message):
                                  "До нього входить 50гб інтернету, безлім на соціальні мережі то безкоштовна роздача інтернету!\n\n" + text)
 
     await message.answer("Спробувати ще раз?", reply_markup=start_kb())
-    await FSM.Q1.set()
-    print(tar)
-    print(tarif)
+    tar = [0, 0, 0, 0, 0, 0, 0]
+    await FSM.Start.set()
 
 
 if __name__ == "__main__":
